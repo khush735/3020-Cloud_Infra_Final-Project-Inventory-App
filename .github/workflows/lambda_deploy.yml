@@ -3,7 +3,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'lambda/get_all_inventory_items/lambda_function.py'
+      - 'lambda/get_all_inventory_items/lambda_function.py' echo "# Test trigger" 
       - 'lambda/get_inventory_item/lambda_function.py'
       - 'lambda/add_inventory_item/lambda_function.py'
       - 'lambda/delete_inventory_item/lambda_function.py'
@@ -38,4 +38,5 @@ jobs:
         working-directory: ./lambda/${{ matrix.function-name }}
       - name: Cleanup zip for ${{ matrix.function-name }}
         run: rm function.zip
+
         working-directory: ./lambda/${{ matrix.function-name }}

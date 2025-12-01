@@ -5,305 +5,385 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory Management System</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-        }
-        .section {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #ddd;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; padding: 20px 0; }
+        h1 { color: #2c3e50; margin-bottom: 5px; }
+        .subtitle { color: #7f8c8d; margin-bottom: 30px; }
+        
+        .alert {
+            padding: 12px 15px;
             border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
         }
-        input, button {
-            padding: 8px 12px;
-            margin: 5px;
-            border: 1px solid #ccc;
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .section-title { 
+            color: #34495e; 
+            margin-bottom: 20px; 
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .form-group { margin-bottom: 15px; }
+        label { 
+            display: block; 
+            margin-bottom: 6px; 
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
             border-radius: 4px;
+            font-size: 15px;
         }
-        button {
-            background-color: #007bff;
-            color: white;
+        input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .btn {
+            padding: 10px 20px;
             border: none;
+            border-radius: 4px;
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
+            transition: background 0.2s;
         }
-        button:hover {
-            background-color: #0056b3;
+        .btn-primary { 
+            background: #3498db; 
+            color: white;
         }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-secondary { 
+            background: #95a5a6; 
+            color: white;
+            margin-bottom: 15px;
+        }
+        .btn-secondary:hover { background: #7f8c8d; }
+        .btn-success { 
+            background: #27ae60; 
+            color: white;
+        }
+        .btn-success:hover { background: #219653; }
+        .btn-danger { 
+            background: #e74c3c; 
+            color: white;
+        }
+        .btn-danger:hover { background: #c0392b; }
+        
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+            margin-top: 15px;
         }
         th {
-            background-color: #f2f2f2;
+            background: #f8f9fa;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #dee2e6;
         }
-        .error {
-            color: red;
-            margin: 10px 0;
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
         }
-        .success {
-            color: green;
-            margin: 10px 0;
+        tr:hover { background: #f8f9fa; }
+        
+        .results-box {
+            min-height: 100px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 2px dashed #dee2e6;
+        }
+        
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        
+        @media (max-width: 768px) {
+            .two-col { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📦 Inventory Management System</h1>
+        <header>
+            <h1>Inventory Management System</h1>
+            <p class="subtitle">COMP-3020 Final Project - Cloud Inventory Application</p>
+        </header>
         
-        <!-- Display Messages -->
-        <div id="message"></div>
-
-        <!-- Section 1: Add New Item -->
-        <div class="section">
-            <h2>Add New Inventory Item</h2>
-            <input type="text" id="itemName" placeholder="Item Name">
-            <input type="text" id="itemDescription" placeholder="Description">
-            <input type="number" id="itemQty" placeholder="Quantity" min="0">
-            <input type="number" id="itemPrice" placeholder="Price" step="0.01" min="0">
-            <input type="number" id="itemLocation" placeholder="Location ID">
-            <button onclick="addItem()">Add Item</button>
+        <div id="message" class="alert"></div>
+        
+        <div class="two-col">
+            <div class="section">
+                <h2 class="section-title">Add New Inventory Item</h2>
+                <div class="form-group">
+                    <label for="itemName">Item Name</label>
+                    <input type="text" id="itemName" placeholder="Laptop, Monitor, Keyboard...">
+                </div>
+                <div class="form-group">
+                    <label for="itemDescription">Description</label>
+                    <input type="text" id="itemDescription" placeholder="Brief description of the item">
+                </div>
+                <div class="form-group">
+                    <label for="itemQty">Quantity</label>
+                    <input type="number" id="itemQty" min="0" placeholder="10">
+                </div>
+                <div class="form-group">
+                    <label for="itemPrice">Price ($)</label>
+                    <input type="number" id="itemPrice" step="0.01" min="0" placeholder="29.99">
+                </div>
+                <div class="form-group">
+                    <label for="itemLocation">Location ID</label>
+                    <input type="number" id="itemLocation" placeholder="100, 200, 300...">
+                </div>
+                <button class="btn btn-primary" id="addBtn">Add Item to Inventory</button>
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title">Delete Inventory Item</h2>
+                <div class="form-group">
+                    <label for="deleteItemId">Item ID</label>
+                    <input type="text" id="deleteItemId" placeholder="Paste item ID from table">
+                </div>
+                <div class="form-group">
+                    <label for="deleteLocationId">Location ID</label>
+                    <input type="number" id="deleteLocationId" placeholder="Enter location ID">
+                </div>
+                <button class="btn btn-danger" id="deleteBtn">Delete Selected Item</button>
+                <p style="margin-top: 15px; color: #7f8c8d; font-size: 14px;">
+                    Note: Use Item IDs from the inventory table below.
+                </p>
+            </div>
         </div>
-
-        <!-- Section 2: View All Items -->
+        
         <div class="section">
-            <h2>All Inventory Items</h2>
-            <button onclick="loadAllItems()">Refresh Inventory</button>
-            <div id="inventoryList"></div>
+            <h2 class="section-title">View All Inventory Items</h2>
+            <button class="btn btn-secondary" id="refreshBtn">Refresh Inventory List</button>
+            <div class="results-box" id="inventoryList">
+                Inventory items will appear here after clicking Refresh.
+            </div>
         </div>
-
-        <!-- Section 3: Search by Location -->
+        
         <div class="section">
-            <h2>Search Items by Location</h2>
-            <input type="number" id="searchLocation" placeholder="Enter Location ID">
-            <button onclick="searchByLocation()">Search Location</button>
-            <div id="locationResults"></div>
-        </div>
-
-        <!-- Section 4: Delete Item -->
-        <div class="section">
-            <h2>Delete Item</h2>
-            <input type="text" id="deleteItemId" placeholder="Item ID">
-            <input type="number" id="deleteLocationId" placeholder="Location ID">
-            <button onclick="deleteItem()" style="background-color: #dc3545;">Delete Item</button>
+            <h2 class="section-title">Search Items by Location</h2>
+            <div style="max-width: 300px; margin-bottom: 15px;">
+                <div class="form-group">
+                    <label for="searchLocation">Enter Location ID</label>
+                    <input type="number" id="searchLocation" placeholder="100, 200, 300...">
+                </div>
+            </div>
+            <button class="btn btn-success" id="searchBtn">Search This Location</button>
+            <div class="results-box" id="locationResults">
+                Location search results will appear here.
+            </div>
         </div>
     </div>
 
     <script>
-        // Replace this with your actual API Gateway URL
-        const API_BASE_URL = 'https://k5zyew9r2b.execute-api.us-east-1.amazonaws.com/prod'0;
-
-        // Display message function
-        function showMessage(message, type = 'error') {
-            const messageDiv = document.getElementById('message');
-            messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
-            setTimeout(() => {
-                messageDiv.innerHTML = '';
-            }, 5000);
+        const API_BASE = 'https://k5zyew9r2b.execute-api.us-east-1.amazonaws.com/prod';
+        
+        function showAlert(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `alert alert-${type}`;
+            msg.style.display = 'block';
+            setTimeout(() => msg.style.display = 'none', 4000);
         }
-
-        // Load all inventory items
-        async function loadAllItems() {
+        
+        function parseResponse(data) {
+            if (Array.isArray(data)) return data;
+            if (data && data.body) {
+                try { return JSON.parse(data.body); } 
+                catch { return data.body; }
+            }
+            return data;
+        }
+        
+        async function fetchInventory() {
             try {
-                const response = await fetch(`${API_BASE_URL}/item`);
-                const data = await response.json();
+                const res = await fetch(`${API_BASE}/item`);
+                if (!res.ok) throw new Error(`Server error: ${res.status}`);
                 
-                let html = '<h3>Current Inventory</h3>';
-                if (data.length > 0) {
-                    html += `
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Description</th>
-                                    <th>Qty</th>
-                                    <th>Price</th>
-                                    <th>Location</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-                    
-                    data.forEach(item => {
-                        html += `
-                            <tr>
-                                <td>${item.item_id}</td>
-                                <td>${item.item_name}</td>
-                                <td>${item.item_description}</td>
-                                <td>${item.item_qty_on_hand}</td>
-                                <td>$${item.item_price}</td>
-                                <td>${item.location_id}</td>
-                            </tr>
-                        `;
-                    });
-                    
-                    html += '</tbody></table>';
+                const data = await res.json();
+                const items = parseResponse(data);
+                
+                if (!Array.isArray(items)) throw new Error('Invalid data format');
+                
+                let html = '';
+                if (items.length === 0) {
+                    html = '<p style="color: #7f8c8d;">No inventory items found.</p>';
                 } else {
-                    html += '<p>No inventory items found.</p>';
+                    html = '<table><tr><th>Item ID</th><th>Name</th><th>Description</th><th>Qty</th><th>Price</th><th>Location</th></tr>';
+                    items.forEach(item => {
+                        const qty = item['item_qty_on_hand '] || item.item_qty_on_hand || item.item_qty;
+                        html += `<tr>
+                            <td><small>${item.item_id}</small></td>
+                            <td><strong>${item.item_name}</strong></td>
+                            <td>${item.item_description}</td>
+                            <td>${qty}</td>
+                            <td>$${parseFloat(item.item_price).toFixed(2)}</td>
+                            <td>${item.location_id}</td>
+                        </tr>`;
+                    });
+                    html += '</table>';
                 }
                 
                 document.getElementById('inventoryList').innerHTML = html;
-                showMessage('Inventory loaded successfully!', 'success');
-            } catch (error) {
-                showMessage('Error loading inventory: ' + error.message);
+                showAlert(`Loaded ${items.length} inventory items`, 'success');
+            } catch (err) {
+                document.getElementById('inventoryList').innerHTML = 
+                    `<p style="color: #e74c3c;">Error: ${err.message}</p>`;
+                showAlert(`Error: ${err.message}`, 'error');
             }
         }
-
-        // Add new item
+        
         async function addItem() {
             const itemData = {
-                item_name: document.getElementById('itemName').value,
-                item_description: document.getElementById('itemDescription').value,
+                item_name: document.getElementById('itemName').value.trim(),
+                item_description: document.getElementById('itemDescription').value.trim(),
                 item_qty_on_hand: parseInt(document.getElementById('itemQty').value),
                 item_price: parseFloat(document.getElementById('itemPrice').value),
                 location_id: parseInt(document.getElementById('itemLocation').value)
             };
-
-            // Basic validation
-            if (!itemData.item_name || !itemData.item_description || !itemData.location_id) {
-                showMessage('Please fill in all required fields');
+            
+            if (!itemData.item_name || !itemData.location_id) {
+                showAlert('Please enter Item Name and Location ID', 'error');
                 return;
             }
-
+            
             try {
-                const response = await fetch(`${API_BASE_URL}/item`, {
+                const res = await fetch(`${API_BASE}/item`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(itemData)
                 });
-
-                const result = await response.json();
                 
-                if (response.status === 201) {
-                    showMessage(`Item added successfully! ID: ${result.item_id}`, 'success');
-                    // Clear form
-                    document.getElementById('itemName').value = '';
-                    document.getElementById('itemDescription').value = '';
-                    document.getElementById('itemQty').value = '';
-                    document.getElementById('itemPrice').value = '';
-                    document.getElementById('itemLocation').value = '';
-                    // Refresh inventory list
-                    loadAllItems();
+                const data = await res.json();
+                const result = parseResponse(data);
+                
+                if (res.status === 201) {
+                    showAlert('Item added successfully!', 'success');
+                    ['itemName','itemDescription','itemQty','itemPrice','itemLocation']
+                        .forEach(id => document.getElementById(id).value = '');
+                    fetchInventory();
                 } else {
-                    showMessage('Error adding item: ' + result.error);
+                    showAlert(result.error || 'Failed to add item', 'error');
                 }
-            } catch (error) {
-                showMessage('Error adding item: ' + error.message);
+            } catch (err) {
+                showAlert(`Error: ${err.message}`, 'error');
             }
         }
-
-        // Search items by location
-        async function searchByLocation() {
-            const locationId = document.getElementById('searchLocation').value;
-            
-            if (!locationId) {
-                showMessage('Please enter a location ID');
+        
+        async function searchLocation() {
+            const locId = document.getElementById('searchLocation').value;
+            if (!locId) {
+                showAlert('Please enter a Location ID', 'error');
                 return;
             }
-
+            
             try {
-                const response = await fetch(`${API_BASE_URL}/location/${locationId}`);
-                const data = await response.json();
+                const res = await fetch(`${API_BASE}/location/${locId}`);
+                if (!res.ok) throw new Error(`Server error: ${res.status}`);
                 
-                let html = `<h3>Items in Location ${locationId}</h3>`;
-                if (data.length > 0) {
-                    html += `
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Description</th>
-                                    <th>Qty</th>
-                                    <th>Price</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-                    
-                    data.forEach(item => {
-                        html += `
-                            <tr>
-                                <td>${item.item_id}</td>
-                                <td>${item.item_name}</td>
-                                <td>${item.item_description}</td>
-                                <td>${item.item_qty_on_hand}</td>
-                                <td>$${item.item_price}</td>
-                            </tr>
-                        `;
-                    });
-                    
-                    html += '</tbody></table>';
+                const data = await res.json();
+                const items = parseResponse(data);
+                
+                if (!Array.isArray(items)) throw new Error('Invalid data format');
+                
+                let html = '';
+                if (items.length === 0) {
+                    html = `<p>No items found in location ${locId}</p>`;
                 } else {
-                    html += '<p>No items found in this location.</p>';
+                    html = `<table><tr><th>Item ID</th><th>Name</th><th>Description</th><th>Qty</th><th>Price</th></tr>`;
+                    items.forEach(item => {
+                        const qty = item['item_qty_on_hand '] || item.item_qty_on_hand || item.item_qty;
+                        html += `<tr>
+                            <td><small>${item.item_id}</small></td>
+                            <td><strong>${item.item_name}</strong></td>
+                            <td>${item.item_description}</td>
+                            <td>${qty}</td>
+                            <td>$${parseFloat(item.item_price).toFixed(2)}</td>
+                        </tr>`;
+                    });
+                    html += '</table>';
                 }
                 
                 document.getElementById('locationResults').innerHTML = html;
-            } catch (error) {
-                showMessage('Error searching location: ' + error.message);
+                showAlert(`Found ${items.length} items in location ${locId}`, 'success');
+            } catch (err) {
+                document.getElementById('locationResults').innerHTML = 
+                    `<p style="color: #e74c3c;">Error: ${err.message}</p>`;
+                showAlert(`Error: ${err.message}`, 'error');
             }
         }
-
-        // Delete item
+        
         async function deleteItem() {
-            const itemId = document.getElementById('deleteItemId').value;
-            const locationId = document.getElementById('deleteLocationId').value;
+            const itemId = document.getElementById('deleteItemId').value.trim();
+            const locId = document.getElementById('deleteLocationId').value;
             
-            if (!itemId || !locationId) {
-                showMessage('Please enter both Item ID and Location ID');
+            if (!itemId || !locId) {
+                showAlert('Please enter both Item ID and Location ID', 'error');
                 return;
             }
-
-            if (!confirm('Are you sure you want to delete this item?')) {
-                return;
-            }
-
+            
+            if (!confirm(`Delete item ${itemId} from location ${locId}?`)) return;
+            
             try {
-                const response = await fetch(`${API_BASE_URL}/item/${itemId}?location_id=${locationId}`, {
+                const res = await fetch(`${API_BASE}/item/${itemId}?location_id=${locId}`, {
                     method: 'DELETE'
                 });
-
-                const result = await response.json();
                 
-                if (response.status === 200) {
-                    showMessage('Item deleted successfully!', 'success');
-                    // Clear form
+                const data = await res.json();
+                const result = parseResponse(data);
+                
+                if (res.status === 200) {
+                    showAlert('Item deleted successfully', 'success');
                     document.getElementById('deleteItemId').value = '';
                     document.getElementById('deleteLocationId').value = '';
-                    // Refresh inventory list
-                    loadAllItems();
+                    fetchInventory();
                 } else {
-                    showMessage('Error deleting item: ' + result.error);
+                    showAlert(result.error || 'Failed to delete item', 'error');
                 }
-            } catch (error) {
-                showMessage('Error deleting item: ' + error.message);
+            } catch (err) {
+                showAlert(`Error: ${err.message}`, 'error');
             }
         }
-
-        // Load inventory when page loads
-        window.onload = loadAllItems;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchInventory();
+            
+            document.getElementById('refreshBtn').addEventListener('click', fetchInventory);
+            document.getElementById('addBtn').addEventListener('click', addItem);
+            document.getElementById('searchBtn').addEventListener('click', searchLocation);
+            document.getElementById('deleteBtn').addEventListener('click', deleteItem);
+            
+            document.getElementById('itemName').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addItem();
+            });
+            document.getElementById('searchLocation').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchLocation();
+            });
+        });
     </script>
 </body>
 </html>

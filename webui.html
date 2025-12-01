@@ -281,7 +281,7 @@
                 const data = await res.json();
                 const result = parseResponse(data);
                 
-                if (res.status === 201) {
+                if (res.status === 201 || res.status === 200) {
                     showAlert('Item added successfully!', 'success');
                     ['itemName','itemDescription','itemQty','itemPrice','itemLocation']
                         .forEach(id => document.getElementById(id).value = '');

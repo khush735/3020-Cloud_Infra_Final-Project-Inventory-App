@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        input, button {
+            padding: 8px 12px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .error {
+            color: red;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Inventory Management System</h1>
+        
+        <!-- Display Messages -->
+        <div id="message"></div>
+
+        <!-- Section 1: Add New Item -->
+        <div class="section">
+            <h2>Add New Inventory Item</h2>
+            <input type="text" id="itemName" placeholder="Item Name">
+            <input type="text" id="itemDescription" placeholder="Description">
+            <input type="number" id="itemQty" placeholder="Quantity" min="0">
+            <input type="number" id="itemPrice" placeholder="Price" step="0.01" min="0">
+            <input type="number" id="itemLocation" placeholder="Location ID">
+            <button onclick="addItem()">Add Item</button>
+        </div>
+
+        <!-- Section 2: View All Items -->
+        <div class="section">
+            <h2>All Inventory Items</h2>
+            <button onclick="loadAllItems()">Refresh Inventory</button>
+            <div id="inventoryList"></div>
+        </div>
+
+        <!-- Section 3: Search by Location -->
+        <div class="section">
+            <h2>Search Items by Location</h2>
+            <input type="number" id="searchLocation" placeholder="Enter Location ID">
+            <button onclick="searchByLocation()">Search Location</button>
+            <div id="locationResults"></div>
+        </div>
+
+        <!-- Section 4: Delete Item -->
+        <div class="section">
+            <h2>Delete Item</h2>
+            <input type="text" id="deleteItemId" placeholder="Item ID">
+            <input type="number" id="deleteLocationId" placeholder="Location ID">
+            <button onclick="deleteItem()" style="background-color: #dc3545;">Delete Item</button>
+        </div>
+    </div>
+
+    <script>
+        // Replace this with your actual API Gateway URL
+        const API_BASE_URL = 'https://k5zyew9r2b.execute-api.us-east-1.amazonaws.com/prod'0;
+
+        // Display message function
+        function showMessage(message, type = 'error') {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        // Load all inventory items
+        async function loadAllItems() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/item`);
+                const data = await response.json();
+                
+                let html = '<h3>Current Inventory</h3>';
+                if (data.length > 0) {
+                    html += `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Qty</th>
+                                    <th>Price</th>
+                                    <th>Location</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    data.forEach(item => {
+                        html += `
+                            <tr>
+                                <td>${item.item_id}</td>
+                                <td>${item.item_name}</td>
+                                <td>${item.item_description}</td>
+                                <td>${item.item_qty_on_hand}</td>
+                                <td>$${item.item_price}</td>
+                                <td>${item.location_id}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
+                } else {
+                    html += '<p>No inventory items found.</p>';
+                }
+                
+                document.getElementById('inventoryList').innerHTML = html;
+                showMessage('Inventory loaded successfully!', 'success');
+            } catch (error) {
+                showMessage('Error loading inventory: ' + error.message);
+            }
+        }
+
+        // Add new item
+        async function addItem() {
+            const itemData = {
+                item_name: document.getElementById('itemName').value,
+                item_description: document.getElementById('itemDescription').value,
+                item_qty_on_hand: parseInt(document.getElementById('itemQty').value),
+                item_price: parseFloat(document.getElementById('itemPrice').value),
+                location_id: parseInt(document.getElementById('itemLocation').value)
+            };
+
+            // Basic validation
+            if (!itemData.item_name || !itemData.item_description || !itemData.location_id) {
+                showMessage('Please fill in all required fields');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/item`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(itemData)
+                });
+
+                const result = await response.json();
+                
+                if (response.status === 201) {
+                    showMessage(`Item added successfully! ID: ${result.item_id}`, 'success');
+                    // Clear form
+                    document.getElementById('itemName').value = '';
+                    document.getElementById('itemDescription').value = '';
+                    document.getElementById('itemQty').value = '';
+                    document.getElementById('itemPrice').value = '';
+                    document.getElementById('itemLocation').value = '';
+                    // Refresh inventory list
+                    loadAllItems();
+                } else {
+                    showMessage('Error adding item: ' + result.error);
+                }
+            } catch (error) {
+                showMessage('Error adding item: ' + error.message);
+            }
+        }
+
+        // Search items by location
+        async function searchByLocation() {
+            const locationId = document.getElementById('searchLocation').value;
+            
+            if (!locationId) {
+                showMessage('Please enter a location ID');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/location/${locationId}`);
+                const data = await response.json();
+                
+                let html = `<h3>Items in Location ${locationId}</h3>`;
+                if (data.length > 0) {
+                    html += `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Qty</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    data.forEach(item => {
+                        html += `
+                            <tr>
+                                <td>${item.item_id}</td>
+                                <td>${item.item_name}</td>
+                                <td>${item.item_description}</td>
+                                <td>${item.item_qty_on_hand}</td>
+                                <td>$${item.item_price}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
+                } else {
+                    html += '<p>No items found in this location.</p>';
+                }
+                
+                document.getElementById('locationResults').innerHTML = html;
+            } catch (error) {
+                showMessage('Error searching location: ' + error.message);
+            }
+        }
+
+        // Delete item
+        async function deleteItem() {
+            const itemId = document.getElementById('deleteItemId').value;
+            const locationId = document.getElementById('deleteLocationId').value;
+            
+            if (!itemId || !locationId) {
+                showMessage('Please enter both Item ID and Location ID');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to delete this item?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/item/${itemId}?location_id=${locationId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                
+                if (response.status === 200) {
+                    showMessage('Item deleted successfully!', 'success');
+                    // Clear form
+                    document.getElementById('deleteItemId').value = '';
+                    document.getElementById('deleteLocationId').value = '';
+                    // Refresh inventory list
+                    loadAllItems();
+                } else {
+                    showMessage('Error deleting item: ' + result.error);
+                }
+            } catch (error) {
+                showMessage('Error deleting item: ' + error.message);
+            }
+        }
+
+        // Load inventory when page loads
+        window.onload = loadAllItems;
+    </script>
+</body>
+</html>
